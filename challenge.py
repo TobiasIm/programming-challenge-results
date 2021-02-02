@@ -6,8 +6,10 @@ import pandas as pd
 
 #In the following lines there are the accessing paths for the original csv-files for the tasks independent of the OS
 myvarpath_weather = os.path.join(ms.main_path, 'weather.csv')
-myvarpath_calculatedWeather = os.path.join(ms.out_path, 'calculated_weather.csv')
+myvarpath_football = os.path.join(ms.main_path, 'football.csv')
 
+myvarpath_calculatedWeather = os.path.join(ms.out_path, 'calculated_weather.csv')
+myvarpath_calculatedFootball = os.path.join(ms.out_path, 'calculated_football.csv')
 
 #TODO: Detailed formulation at the beginning of each method
 #TODO: Implementation of the connector for additional data access points (e.g. MySQL-Database)
@@ -36,6 +38,7 @@ myvarpath_calculatedWeather = os.path.join(ms.out_path, 'calculated_weather.csv'
     #     mydb.close()        
     #     return output
 
+
 class FileReaderWriter():
     '''A class used to load, create and calculate values from csv-file
     
@@ -62,11 +65,11 @@ class FileReaderWriter():
         and safe it into var diff. After this step the result and the regarding values are safed into an new csv-file.
     '''
 
-    def __init__(self, infile, outfile, minMax):
+    def __init__(self, infile, outfile, minMax, absolute):
         self.infile = infile
         self.outfile = outfile
         self.minMax = minMax
-
+        self.absolute = absolute
 
     def read(self, fieldname1, fieldname2, fieldname3, fieldname4, delimiter, row1, row2, row3):
         '''method to load the csv-file and calculate two columns with the method ___calculate___. Afterwards safe the result into new csv-file'''
@@ -106,7 +109,10 @@ class FileReaderWriter():
                    column2 = float(column2)
 
         #either absolute value or just the difference has to be calculated, depend on the users goal       
-        diff = column1 - column2
+        if self.absolute:
+            diff = abs(column1 - column2)
+        else: 
+            diff = column1 - column2
 
         return diff
 
@@ -129,7 +135,11 @@ class FileReaderWriter():
         print(str(my_out1)+ ": " + str(my_out2))
 
 #Generation of the objects from class FileReader with the parameters to get the solution described in the task "programming challenge"
-data_weather = FileReaderWriter(myvarpath_weather, myvarpath_calculatedWeather, "min") #FileReader(path to original csv-file, path to manipulated csv-file, either "min" or "max" for Maximum or Minimum difference, absolute value == True)
+data_weather = FileReaderWriter(myvarpath_weather, myvarpath_calculatedWeather, "min", False) #FileReader(path to original csv-file, path to manipulated csv-file, either "min" or "max" for Maximum or Minimum difference, absolute value == True)
 data_weather.read("Day", "weather_maxTemp", "weather_minTemp", "weather_diff", ",", 0, 1, 2) #read(first fieldname e.g. "Day" or "Team" for new csv, second fieldname, third fieldname, calculated fieldname, delimiter, 
                                                                                             #rownumber from original for first fieldname, rownumber second, rownumber third)
-data_weather.minMaxResult("weather_diff", "Day", "weather_diff")#minMaxResult(column in which the min or max value should be extract, first column value for output, second column value for output)                            
+data_weather.minMaxResult("weather_diff", "Day", "weather_diff")#minMaxResult(column in which the min or max value should be extract, first column value for output, second column value for output)
+
+data_football = FileReaderWriter(myvarpath_football, myvarpath_calculatedFootball, "min", True)
+data_football.read("Team", "Goals", "goalsAllowed", "goalDiff", ",", 0, 5, 6)
+data_football.minMaxResult("goalDiff", "Team", "goalDiff")
