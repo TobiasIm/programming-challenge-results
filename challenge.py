@@ -1,6 +1,8 @@
 import csv
 import os
 import my_settings as ms
+import pandas as pd
+#import mysql.connector
 
 #In the following lines there are the accessing paths for the original csv-files for the tasks independent of the OS
 myvarpath_weather = os.path.join(ms.main_path, 'weather.csv')
@@ -8,6 +10,31 @@ myvarpath_calculatedWeather = os.path.join(ms.out_path, 'calculated_weather.csv'
 
 
 #TODO: Detailed formulation at the beginning of each method
+#TODO: Implementation of the connector for additional data access points (e.g. MySQL-Database)
+#In the following lines there is an example for an MySQL-Connector
+
+#def DatabaseCon(Id):
+    #connect with database
+    #     mydb = mysql.connector.connect(
+    #     host="",
+    #     user="",
+    #     passwd="",
+    #     database="")
+    #
+    #     mycursor = mydb.cursor()
+    #
+    #     #query to get all the information from database/table
+    #     sql='select * from test where Id = "{0}";'.format(Id)
+    #     mycursor.execute(sql)
+    #
+    #     #output of the data from database
+    #     mydata = mycursor.fetchall()
+    #            
+    #     for i in mydata:
+    #         output = i[0]
+    #
+    #     mydb.close()        
+    #     return output
 
 class FileReaderWriter():
     '''A class used to load, create and calculate values from csv-file
@@ -35,13 +62,17 @@ class FileReaderWriter():
         and safe it into var diff. After this step the result and the regarding values are safed into an new csv-file.
     '''
 
-    def __init__(self, infile, outfile):
+    def __init__(self, infile, outfile, minMax):
         self.infile = infile
         self.outfile = outfile
+        self.minMax = minMax
 
 
     def read(self, fieldname1, fieldname2, fieldname3, fieldname4, delimiter, row1, row2, row3):
         '''method to load the csv-file and calculate two columns with the method ___calculate___. Afterwards safe the result into new csv-file'''
+
+        #TODO: Implementation of JSON or Webservice (e.g. MySQL-Connector)
+        #data = DatabaseCon(Id)
 
         #Generate a new csv-file for the output of calculation
         outfile = open(self.outfile, "w", newline="")
@@ -79,7 +110,26 @@ class FileReaderWriter():
 
         return diff
 
+    def minMaxResult(self, columnname, column1, column2):
+        '''Through this method min or max value of a column will be presented in terminal as output'''
+        
+        #open manipulated csv-file
+        df = pd.read_csv(self.outfile) 
+
+        #either min or max value has to be presented, depend on users output goal
+        if self.minMax == "max":                 
+            max_row = df[columnname].argmax()
+        elif self.minMax =="min":                
+            max_row = df[columnname].argmin()
+
+        #gives the columnname and the min or max value for the output    
+        my_out1 = df.iloc[max_row,:][column1]
+        my_out2 = int(df.loc[max_row, column2])
+        
+        print(str(my_out1)+ ": " + str(my_out2))
+
 #Generation of the objects from class FileReader with the parameters to get the solution described in the task "programming challenge"
-data_weather = FileReaderWriter(myvarpath_weather, myvarpath_calculatedWeather) #FileReader(path to original csv-file, path to manipulated csv-file, either "min" or "max" for Maximum or Minimum difference, absolute value == True)
+data_weather = FileReaderWriter(myvarpath_weather, myvarpath_calculatedWeather, "min") #FileReader(path to original csv-file, path to manipulated csv-file, either "min" or "max" for Maximum or Minimum difference, absolute value == True)
 data_weather.read("Day", "weather_maxTemp", "weather_minTemp", "weather_diff", ",", 0, 1, 2) #read(first fieldname e.g. "Day" or "Team" for new csv, second fieldname, third fieldname, calculated fieldname, delimiter, 
                                                                                             #rownumber from original for first fieldname, rownumber second, rownumber third)
+data_weather.minMaxResult("weather_diff", "Day", "weather_diff")#minMaxResult(column in which the min or max value should be extract, first column value for output, second column value for output)                            
